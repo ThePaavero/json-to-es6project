@@ -1,0 +1,36 @@
+{
+  "projectName": "ProtoProject",
+  "author": "Pekka <pekka@astudios.org>",
+  "domain": "es6protoproject.dev",
+  "classes": {
+    "modules": [
+      {
+        "name": "ModuleA",
+        "properties": [
+          "foo",
+          "state:object",
+          "debugMode:boolean"
+        ],
+        "methods": [
+          "init",
+          "methodA",
+          "methodB",
+          "methodC"
+        ]
+      },
+      {
+        "name": "ModuleB",
+        "properties": [
+          "something:string",
+          "debugMode:boolean"
+        ],
+        "methods": [
+          "init",
+          "methodA",
+          "methodB",
+          "methodC"
+        ]
+      }
+    ]
+  }
+}

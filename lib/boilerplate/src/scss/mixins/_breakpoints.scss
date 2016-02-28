@@ -1,0 +1,45 @@
+// Usage examples:
+/*
+body {
+  @include bp(tiny) {
+    background: brown;
+  }
+  @include bp(small) {
+    background: red;
+  }
+  @include bp(medium) {
+    background: blue;
+  }
+  @include bp(large) {
+    background: yellow;
+  }
+  @include bp(huge) {
+    background: orange;
+  }
+}
+*/
+
+@mixin bp($media-name) {
+
+  @if $media-name == nth(nth($breakpoints, 1), 1) {
+    @include r(nth(nth($breakpoints, 2), 2) - 1, 'max-width') {
+      @content;
+    }
+  } @else {
+    @each $bp in $breakpoints {
+      $bp-name: nth($bp, 1);
+      $bp-val: nth($bp, 2);
+      @if $bp-name == $media-name {
+        @include r($bp-val) {
+          @content;
+        }
+      }
+    }
+  }
+}
+
+@mixin r($value, $operator: 'min-width', $query: 'screen') {
+  @media only #{$query} and (#{$operator}: #{$value}) {
+    @content;
+  }
+}
