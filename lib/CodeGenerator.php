@@ -16,6 +16,7 @@ class CodeGenerator
     public $author;
     public $classesToImportToMain = [];
     public $domain = '';
+    public $sassIncludes = [];
 
     /**
      * CodeGenerator constructor.
@@ -66,6 +67,7 @@ class CodeGenerator
         $this->projectName = $data->projectName;
         $this->author = $data->author;
         $this->domain = $data->domain;
+        $this->sassIncludes = $data->sassIncludes;
 
         $generatedDirPath = __DIR__ . '/../generated/';
 
@@ -75,7 +77,7 @@ class CodeGenerator
         }
 
         $this->projectPath = $generatedDirPath . $data->projectName . '/';
-        $this->projectSourcePath = $this->projectPath . 'src/js/';
+        $this->projectSourcePath = $this->projectPath . 'src/';
 
         if (is_dir($this->projectPath))
         {
@@ -85,7 +87,8 @@ class CodeGenerator
         echo 'Creating project directory in /generated/' . $this->projectName . PHP_EOL;
         mkdir($this->projectPath);
         mkdir($this->projectPath . 'src');
-        mkdir($this->projectSourcePath);
+        mkdir($this->projectSourcePath . 'js');
+        mkdir($this->projectSourcePath . 'scss');
 
         // Copy our JSPM stuff
         $this->copyBoilerplateCode();
@@ -98,7 +101,7 @@ class CodeGenerator
         foreach ($data->classes as $dirName => $classes)
         {
             echo 'Creating directory "' . $dirName . '"...' . PHP_EOL;
-            $dirPath = $this->projectSourcePath . $dirName . '/';
+            $dirPath = $this->projectSourcePath . 'js/' . $dirName . '/';
             mkdir($dirPath);
 
             foreach ($classes as $class)
@@ -110,6 +113,8 @@ class CodeGenerator
 
         // Create the main.js file
         $this->createMainJsFile();
+
+        $this->createSassIncludes();
     }
 
     /**
@@ -252,7 +257,7 @@ class CodeGenerator
             $this->getMainImportsString()
         ];
 
-        $destinationPath = $this->projectSourcePath . 'main.js';
+        $destinationPath = $this->projectSourcePath . 'js/main.js';
         $template = file_get_contents(__DIR__ . '/templates/' . 'main.js');
         $code = str_replace($from, $to, $template);
         file_put_contents($destinationPath, $code);
@@ -297,12 +302,50 @@ class CodeGenerator
     {
         $gulpFilePath = $this->projectPath . 'gulpfile.js';
         $contents = file_get_contents($gulpFilePath);
+
         $from = [
             '[_DOMAIN_]'
         ];
+
         $to = [
             $this->domain
         ];
+
         file_put_contents($gulpFilePath, str_replace($from, $to, $contents));
+    }
+
+    public function createSassIncludes()
+    {
+        if (empty($this->sassIncludes))
+        {
+            return;
+        }
+
+        $importString = '';
+
+        foreach ($this->sassIncludes as $include)
+        {
+            $scssBoilerplateCode = '// ...';
+
+            $writeTo = $this->projectSourcePath . 'scss/' . $include . '.scss';
+            file_put_contents($writeTo, $scssBoilerplateCode);
+            echo 'Created sass include "' . $include . '"' . PHP_EOL;
+
+            $importString .= '@import "' . str_replace('/_', '/', $include) . '";' . PHP_EOL;
+        }
+
+        $projectScssFilePath = $this->projectSourcePath . 'scss/project.scss';
+        $contents = file_get_contents($projectScssFilePath);
+
+        $from = [
+            '[_INCLUDES_]'
+        ];
+        $to = [
+            $importString
+        ];
+
+        file_put_contents($projectScssFilePath, str_replace($from, $to, $contents));
+
+        echo 'Added @imports for all includes.' . PHP_EOL;
     }
 }

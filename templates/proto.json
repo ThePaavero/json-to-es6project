@@ -32,5 +32,9 @@
         ]
       }
     ]
-  }
+  },
+  "sassIncludes": [
+    "components/_header",
+    "components/_footer"
+  ]
 }
