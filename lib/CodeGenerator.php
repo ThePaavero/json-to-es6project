@@ -314,6 +314,9 @@ class CodeGenerator
         file_put_contents($gulpFilePath, str_replace($from, $to, $contents));
     }
 
+    /**
+     * Create our sass files. Also add their @import lines to the main project.scss file.
+     */
     public function createSassIncludes()
     {
         if (empty($this->sassIncludes))
