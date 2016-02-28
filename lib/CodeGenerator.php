@@ -343,6 +343,7 @@ class CodeGenerator
         $from = [
             '[_INCLUDES_]'
         ];
+
         $to = [
             $importString
         ];
