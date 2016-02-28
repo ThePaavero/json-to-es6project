@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Class CodeGenerator
+ *
+ * @author Pekka <pekka@astudios.org>
+ */
 class CodeGenerator
 {
     public $templateDirectory = __DIR__ . '/../templates/';
@@ -12,17 +17,32 @@ class CodeGenerator
     public $classesToImportToMain = [];
     public $domain = '';
 
+    /**
+     * CodeGenerator constructor.
+     *
+     * @param $templateName
+     */
     public function __construct($templateName)
     {
         $this->templateName = $templateName;
         $this->templateFilePath = $this->templateDirectory . $this->templateName . '.json';
     }
 
+    /**
+     * Do we have a valid template file path?
+     *
+     * @return bool
+     */
     public function templateJsonFileExists()
     {
         return file_exists($this->templateFilePath);
     }
 
+    /**
+     * Endpoint for our operations.
+     *
+     * @throws Exception
+     */
     public function run()
     {
         $template = file_get_contents($this->templateFilePath);
@@ -36,13 +56,25 @@ class CodeGenerator
         $this->createFiles($data);
     }
 
+    /**
+     * Generate our files.
+     *
+     * @param $data
+     */
     public function createFiles($data)
     {
         $this->projectName = $data->projectName;
         $this->author = $data->author;
         $this->domain = $data->domain;
 
-        $this->projectPath = __DIR__ . '/../generated/' . $data->projectName . '/';
+        $generatedDirPath = __DIR__ . '/../generated/';
+
+        if ( ! is_dir($generatedDirPath))
+        {
+            mkdir($generatedDirPath);
+        }
+
+        $this->projectPath = $generatedDirPath . $data->projectName . '/';
         $this->projectSourcePath = $this->projectPath . 'src/js/';
 
         if (is_dir($this->projectPath))
@@ -57,6 +89,9 @@ class CodeGenerator
 
         // Copy our JSPM stuff
         $this->copyBoilerplateCode();
+
+        // Modify our gulpfile template
+        $this->replaceTokensInGulpfile();
 
         $this->classTemplate = file_get_contents(__DIR__ . '/templates/class.js');
 
@@ -77,6 +112,12 @@ class CodeGenerator
         $this->createMainJsFile();
     }
 
+    /**
+     * Create a JS class file and its code.
+     *
+     * @param $dirPath
+     * @param $class
+     */
     public function createClass($dirPath, $class)
     {
         $props = $this->getConstructorString($class->properties);
@@ -105,6 +146,13 @@ class CodeGenerator
         $this->classesToImportToMain[] = basename($dirPath) . '/' . $class->name;
     }
 
+    /**
+     * Get the first part of our JS class. The constructor method
+     * with optional properties.
+     *
+     * @param $props
+     * @return string
+     */
     public function getConstructorString($props)
     {
         if (empty($props))
@@ -162,6 +210,12 @@ class CodeGenerator
         return $string;
     }
 
+    /**
+     * Get a string with a list of boilerplate methods.
+     *
+     * @param $methods
+     * @return string
+     */
     public function getMethodsString($methods)
     {
         $string = '';
@@ -181,6 +235,9 @@ class CodeGenerator
         return $string;
     }
 
+    /**
+     * Create our main.js file.
+     */
     public function createMainJsFile()
     {
         $from = [
@@ -201,6 +258,11 @@ class CodeGenerator
         file_put_contents($destinationPath, $code);
     }
 
+    /**
+     * Get import JS lines for our main.js file.
+     *
+     * @return string
+     */
     public function getMainImportsString()
     {
         $string = '';
@@ -218,15 +280,19 @@ class CodeGenerator
         return $string;
     }
 
+    /**
+     * Copy our boilerplate code.
+     */
     public function copyBoilerplateCode()
     {
         $sourcePath = __DIR__ . '/boilerplate/*';
         $destinationPath = $this->projectPath;
         exec('cp -r ' . $sourcePath . ' ' . $destinationPath);
-
-        $this->replaceTokensInGulpfile();
     }
 
+    /**
+     * Replace tokens in our gulpfile.
+     */
     public function replaceTokensInGulpfile()
     {
         $gulpFilePath = $this->projectPath . 'gulpfile.js';
